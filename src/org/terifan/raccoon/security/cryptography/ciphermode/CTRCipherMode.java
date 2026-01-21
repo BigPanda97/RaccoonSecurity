@@ -96,10 +96,7 @@ public final class CTRCipherMode extends CipherMode
 			{
 				aCipher.engineEncryptBlock(counter, 0, ks, 0);	// E_k(counter)
 
-				for (int i = 0; i < remainingBytes; i++, aOffset++)
-				{
-					aBuffer[aOffset] ^= ks[i];
-				}
+				xor(aBuffer, aOffset, remainingBytes, ks, 0);
 			}
 		}
 	}

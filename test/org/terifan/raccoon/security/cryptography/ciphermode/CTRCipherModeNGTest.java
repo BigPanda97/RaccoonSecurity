@@ -1,12 +1,13 @@
 package org.terifan.raccoon.security.cryptography.ciphermode;
 
-import java.security.SecureRandom;
-import java.util.Arrays;
+import java.util.HexFormat;
+import java.util.Random;
 import org.terifan.raccoon.security.cryptography.AES;
 import org.terifan.raccoon.security.cryptography.Kuznechik;
 import org.terifan.raccoon.security.cryptography.SecretKey;
 import org.terifan.raccoon.security.cryptography.Serpent;
 import org.terifan.raccoon.security.cryptography.Twofish;
+import static org.testng.Assert.assertEquals;
 import org.testng.annotations.Test;
 
 
@@ -29,34 +30,29 @@ public class CTRCipherModeNGTest extends CipherModeHelper
 	}
 
 
-	@Test(enabled = false)
+	@Test
 	public void testOddLength()
 	{
 		AES cipher = new AES(new SecretKey(new byte[16]));
-		AES tweakCipher = new AES(new SecretKey(new byte[16]));
-		SecureRandom prng = new SecureRandom();
-		int[] iv =
-		{
-			1, 2, 3, 4
-		};
+		AES tweak = new AES(new SecretKey(new byte[16]));
+		int[] iv = new int[4];
+		Random prng = new Random();
 
-		for (int u = 1; u <= 8; u++)
+		for (int unitSize = 1; unitSize <= 8; unitSize++)
 		{
-			for (int z = 1; z < 100; z++)
+			for (int length = 1; length < 100; length++)
 			{
-				byte[] data = new byte[z];
+				byte[] buffer = new byte[length];
+				prng.nextBytes(buffer);
+				byte[] input = buffer.clone();
 
-				new CTRCipherMode().encrypt(data, 0, data.length, cipher, 0, 16 * u, iv, tweakCipher);
+				new CTRCipherMode().encrypt(buffer, 0, length, cipher, 0, 16 * unitSize, iv, tweak);
 
-//				Debug.hexDump(1024, data);
-//				if(data[data.length-1]==0)throw new IllegalStateException();
-				new CTRCipherMode().decrypt(data, 0, data.length, cipher, 0, 16 * u, iv, tweakCipher);
+				System.out.printf("%d %2d %s%n", unitSize, length, HexFormat.of().formatHex(buffer));
 
-//				Debug.hexDump(1024, data);
-				if (!Arrays.equals(data, new byte[data.length]))
-				{
-					throw new IllegalStateException();
-				}
+				new CTRCipherMode().decrypt(buffer, 0, length, cipher, 0, 16 * unitSize, iv, tweak);
+
+				assertEquals(buffer, input);
 			}
 		}
 	}
