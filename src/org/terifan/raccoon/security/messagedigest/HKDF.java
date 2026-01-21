@@ -20,38 +20,38 @@ public class HKDF
 	}
 
 
-	private byte[] hkdf_extract(byte[] salt, byte[] ikm)
+	private byte[] hkdf_extract(byte[] aKey, byte[] aSalt)
 	{
-		HMAC hmac = new HMAC(mMessageDigest, salt);
-		return hmac.digest(ikm);
+		HMAC hmac = new HMAC(mMessageDigest, aKey);
+		return hmac.digest(aSalt);
 	}
 
 
-	private byte[] hkdf_expand(byte[] prk, byte[] info, int length) throws IOException
+	private byte[] hkdf_expand(byte[] aKey, byte[] aInfo, int aLength) throws IOException
 	{
 		ByteArrayOutputStream okm = new ByteArrayOutputStream();
 		byte[] tmp = new byte[0];
-		for (int i = 1; okm.size() < length; i++)
+		for (int i = 1; okm.size() < aLength; i++)
 		{
-			HMAC hmac = new HMAC(mMessageDigest, prk);
+			HMAC hmac = new HMAC(mMessageDigest, aKey);
 			hmac.update(tmp);
-			hmac.update(info);
+			hmac.update(aInfo);
 			hmac.update((byte)i);
 			tmp = hmac.digest();
 			okm.write(tmp);
 		}
-		return Arrays.copyOfRange(okm.toByteArray(), 0, length);
+		return Arrays.copyOfRange(okm.toByteArray(), 0, aLength);
 	}
 
 
-	public byte[] hkdf(byte[] salt, byte[] ikm, byte[] info, int length) throws IOException
+	public byte[] hkdf(byte[] aSalt, byte[] aKey, byte[] aInfo, int aLength) throws IOException
 	{
-		if (length > 255 * mMessageDigest.getDigestLength())
+		if (aLength > 255 * mMessageDigest.getDigestLength())
 		{
 			throw new IllegalStateException("Cannot expand a message to this length");
 		}
 
-		return hkdf_expand(hkdf_extract(salt, ikm), info, length);
+		return hkdf_expand(hkdf_extract(aSalt, aKey), aInfo, aLength);
 	}
 
 
